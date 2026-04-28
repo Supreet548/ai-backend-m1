@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -6,23 +7,11 @@ app = FastAPI()
 def home():
     return{"message":"Welcome to my backend"}
 
-@app.get("/hello")
-def hello():
-    return{"message":"Hello, AI Engineer!"}
+class User(BaseModel):
+    name : str
+    email : str
+    age : int
 
-@app.get("/about")
-def about():
-    return{"name":"Supreet Kumar", "goal":"AI Engineer"}
-
-
-@app.get("/name")
-def name():
-    return{"name":"Supreet Kumar"}
-
-@app.get("/city")
-def city():
-    return{"city":"Bengaluru"}
-
-@app.get("/aim")
-def aim():
-    return {"aim":"Become an AI Engineer"}
+app.post("/create-user")
+def create_user(user:User):
+    return{"message": "User created successfully", "data": user}
