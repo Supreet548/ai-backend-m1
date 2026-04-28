@@ -12,6 +12,6 @@ class User(BaseModel):
     email : str
     age : int
 
-app.post("/create-user")
+@app.post("/create-user")
 def create_user(user:User):
     return{"message": "User created successfully", "data": user}
