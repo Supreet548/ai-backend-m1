@@ -1,44 +1,33 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi import FastAPI,Query
+from pydantic import BaseModel,EmailStr,Field
+from typing import Optional
 
 app = FastAPI()
 
-notes = [] #temporary memory database
+users = [] #temporary memory database
 
-class Note(BaseModel):
-    title : str
-    content : str
+class User(BaseModel):
+    name : str = Field(..., min_length=3,max_length=30)
+    email : EmailStr
+    age : int= Field(...,gt=18,lt=100)
+    phone:Optional[str]=None
 
 
 @app.get("/")
 def home():
-    return {"message":"Notes API Running"}
+    return {"message":"API Running"}
 
-@app.post("/notes")
-def create_note(note:Note):
-    note_data = note.model_dump()
-    note_data["id"]= len(notes)+1
-    notes.append(note_data)
-    return {"message":"Note created", "data": note_data}
+@app.post("/users")
+def create_user(user:User):
+    users.append(user.model_dump())
+    return{
+        "success": True,
+        "message":"User created successfully",
+        "data": user
+    }
 
-@app.get("/notes")
-def get_notes():
-    return notes
+@app.get("/users")
+def get_users(limit:int = Query(10,gt=0,le=100)):
+    return users[:limit]
 
 
-@app.put("/notes/{note_id}")
-def update_notes(note_id:int,note:Note):
-    for item in notes:
-        if item["id"]==note_id:
-            item["title"]=note.title
-            item["content"]=note.content
-            return {"message":"Note updated","data":item}
-    return {"error":"Note not found"}
-    
-@app.delete("/notes/{note_id}")
-def delete_note(note_id:int):
-    for item in notes:
-        if item["id"]==note_id:
-            notes.remove(item)
-            return{"message":"Note deleted"}
-    return{"error":"Note not found"}        
