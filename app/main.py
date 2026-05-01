@@ -1,10 +1,13 @@
 from fastapi import FastAPI
-from .routes import router
+from app.routes import user_routes
 
 app = FastAPI()
 
-app.include_router(router)
+app.include_router(user_routes.router)
+
 
 @app.get("/")
 def home():
-    return{"message":"Project Running"}
+    return {
+        "message": "API is running 🚀"
+    }

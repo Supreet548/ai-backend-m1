@@ -1,9 +1,14 @@
-from fastapi import APIRouter
-from .schemas import UserSchema
-from .utils import UserHelper
-from .database import get_connection
-from fastapi import HTTPException, status
-from .logger import logger
+from fastapi import APIRouter,HTTPException
+from app.schemas.user_schema import UserSchema
+from app.utils.user_helper import UserHelper
+from app.logger import logger
+
+
+from app.services.user_service import (
+    create_user_service,
+    fetch_all_users,
+    fetch_user_by_id
+)
 
 router = APIRouter()
 
@@ -13,17 +18,7 @@ def create_user(user:UserSchema):
 
         logger.info(f"Creating user: {user.name}")
 
-        conn = get_connection()
-        cur = conn.cursor()
-
-        cur.execute(
-            "Insert INTO users (name, email, age, city) VALUES(%s, %s, %s, %s)",
-            (user.name, user.email, user.age, user.city)
-        )
-
-        conn.commit()
-        cur.close()
-        conn.close()
+        create_user_service(user)
 
         helper = UserHelper(user.name)
 
@@ -40,20 +35,16 @@ def create_user(user:UserSchema):
             status_code=500,
             detail="Database connection failed"
         )
+    
+
+#Fetch all users
 
 @router.get("/users")
 def get_users():
     try:
         logger.info("Fetching all users")
 
-        conn = get_connection()
-        cur = conn.cursor()
-
-        cur.execute("SELECT * FROM users")
-        rows = cur.fetchall()
-
-        cur.close()
-        conn.close()
+        rows = fetch_all_users()
 
     except Exception:
         logger.error("Database connection failed in GET /users")
@@ -84,21 +75,14 @@ def get_users():
     }
     
     
-
+#Get user by ID
 @router.get("/users/{user_id}")
 def get_user(user_id:int):
     try:
 
         logger.info(f"Fetching user with id: {user_id}")
 
-        conn = get_connection()
-        cur = conn.cursor()
-
-        cur.execute("SELECT*FROM users WHERE id = %s",(user_id,))
-        row = cur.fetchone()
-
-        cur.close()
-        conn.close()
+        row = fetch_user_by_id(user_id)
 
     except Exception:
 
