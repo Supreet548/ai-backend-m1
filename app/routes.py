@@ -3,12 +3,15 @@ from .schemas import UserSchema
 from .utils import UserHelper
 from .database import get_connection
 from fastapi import HTTPException, status
+from .logger import logger
 
 router = APIRouter()
 
 @router.post("/users")
 def create_user(user:UserSchema):
     try:
+
+        logger.info(f"Creating user: {user.name}")
 
         conn = get_connection()
         cur = conn.cursor()
@@ -30,6 +33,9 @@ def create_user(user:UserSchema):
         }
     
     except Exception:
+
+        logger.error("Database connection failed")
+
         raise HTTPException(
             status_code=500,
             detail="Database connection failed"
@@ -38,6 +44,8 @@ def create_user(user:UserSchema):
 @router.get("/users")
 def get_users():
     try:
+        logger.info("Fetching all users")
+
         conn = get_connection()
         cur = conn.cursor()
 
@@ -47,32 +55,41 @@ def get_users():
         cur.close()
         conn.close()
 
-        users_list=[]
-
-        for row in rows:
-            users_list.append({
-                "id":row[0],
-                "name":row[1],
-                "email":row[2],
-                "age":row[3],
-                "city":row[4]
-            })
-
-        return{
-            "success":True,
-            "data":users_list,
-            "message": "Users fetched successfully"
-        }
-    
     except Exception:
+        logger.error("Database connection failed in GET /users")
+
         raise HTTPException(
             status_code=500,
             detail="Database connection failed"
         )
 
+    users_list=[]
+
+    for row in rows:
+        users_list.append({
+            "id":row[0],
+            "name":row[1],
+            "email":row[2],
+            "age":row[3],
+            "city":row[4]
+        })
+
+
+    logger.info(f"Returned {len(users_list)} users")
+
+    return{
+        "success":True,
+        "data":users_list,
+        "message": "Users fetched successfully"
+    }
+    
+    
+
 @router.get("/users/{user_id}")
 def get_user(user_id:int):
     try:
+
+        logger.info(f"Fetching user with id: {user_id}")
 
         conn = get_connection()
         cur = conn.cursor()
@@ -84,6 +101,9 @@ def get_user(user_id:int):
         conn.close()
 
     except Exception:
+
+        logger.error("Database connection failed in GET /users")
+        
         raise HTTPException(
             status_code=500,
             detail="Database connection failed"
@@ -94,6 +114,8 @@ def get_user(user_id:int):
             status_code=404,
             detail="User not found"
         )
+    
+    logger.info(f"Returned user having UserID {user_id} ")
 
     return {
         "success": True,
@@ -105,6 +127,8 @@ def get_user(user_id:int):
             "city": row[4]
         }
     }
+
+
     
     
     
