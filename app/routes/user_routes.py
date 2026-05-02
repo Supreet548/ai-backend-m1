@@ -7,7 +7,7 @@ from fastapi import Header
 from app.auth import create_access_token, verify_token
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends
-
+from app.utils.security import verify_password
 from app.services.user_service import (
     create_user_service,
     fetch_all_users,
@@ -129,6 +129,12 @@ def login(user: LoginSchema):
 
     if not row:
         raise HTTPException(404, "User not found")
+
+    stored_password = row[5]  # adjust if needed
+
+    if not verify_password(user.password, stored_password):
+        raise HTTPException(401, "Invalid credentials")
+    
 
     token = create_access_token({"user_id": row[0]})
 

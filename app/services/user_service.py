@@ -1,5 +1,5 @@
 from app.database import get_connection
-
+from app.utils.security import hash_password
 #  Create User
 def create_user_service(user):
     conn = get_connection()
@@ -54,3 +54,21 @@ def fetch_user_by_email(email: str):
     conn.close()
 
     return row
+
+
+
+
+def create_user_service(user):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    hashed_pwd = hash_password(user.password)
+
+    cur.execute(
+        "INSERT INTO users (name, email, age, city, password) VALUES (%s, %s, %s, %s, %s)",
+        (user.name, user.email, user.age, user.city, hashed_pwd )
+    )
+
+    conn.commit()
+    cur.close()
+    conn.close()
