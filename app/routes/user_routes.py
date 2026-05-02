@@ -130,18 +130,24 @@ def login(user: LoginSchema):
     if not row:
         raise HTTPException(404, "User not found")
 
-    stored_password = row[5]  # adjust if needed
+    stored_password = row[5]  
 
     if not verify_password(user.password, stored_password):
         raise HTTPException(401, "Invalid credentials")
     
 
-    token = create_access_token({"user_id": row[0]})
+    token = create_access_token({
+    "user_id": row[0],
+    "role": row[6]   
+    
+    })
 
     return {
         "access_token": token,
         "token_type": "bearer"
     }
+
+
     
     
 
@@ -161,3 +167,18 @@ def protected_route(credentials: HTTPAuthorizationCredentials = Depends(security
         "message": "Access granted",
         "user": payload
     }
+
+
+
+@router.get("/admin")
+def admin_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(401, "Invalid token")
+
+    if payload.get("role") != "admin":
+        raise HTTPException(403, "Access denied")
+
+    return {"message": "Welcome Admin"}

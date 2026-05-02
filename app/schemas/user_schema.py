@@ -8,6 +8,7 @@ class UserSchema(BaseModel):
     password: str 
     age : int= Field(...,gt=18,lt=100)
     city: str
+    role: str = "user"
 
 
 class LoginSchema(BaseModel):

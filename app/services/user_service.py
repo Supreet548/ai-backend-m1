@@ -65,8 +65,8 @@ def create_user_service(user):
     hashed_pwd = hash_password(user.password)
 
     cur.execute(
-        "INSERT INTO users (name, email, age, city, password) VALUES (%s, %s, %s, %s, %s)",
-        (user.name, user.email, user.age, user.city, hashed_pwd )
+        "INSERT INTO users (name, email, age, city, password, role) VALUES (%s, %s, %s, %s, %s, %s)",
+        (user.name, user.email, user.age, user.city, hashed_pwd , user.role)
     )
 
     conn.commit()
