@@ -1,6 +1,6 @@
 from app.database import get_connection
 
-# ✅ Create User
+#  Create User
 def create_user_service(user):
     conn = get_connection()
     cur = conn.cursor()
@@ -15,7 +15,7 @@ def create_user_service(user):
     conn.close()
 
 
-# ✅ Fetch All Users
+#  Fetch All Users
 def fetch_all_users():
     conn = get_connection()
     cur = conn.cursor()
@@ -29,12 +29,25 @@ def fetch_all_users():
     return rows
 
 
-# ✅ Fetch User by ID
+#  Fetch User by ID
 def fetch_user_by_id(user_id: int):
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+    row = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return row
+
+#Fetch user by email
+def fetch_user_by_email(email: str):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
     row = cur.fetchone()
 
     cur.close()

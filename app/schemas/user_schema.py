@@ -8,3 +8,7 @@ class UserSchema(BaseModel):
     age : int= Field(...,gt=18,lt=100)
     phone:Optional[str]=None
     city: str
+
+
+class LoginSchema(BaseModel):
+    email: EmailStr

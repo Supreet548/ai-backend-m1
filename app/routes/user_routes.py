@@ -1,13 +1,18 @@
 from fastapi import APIRouter,HTTPException
-from app.schemas.user_schema import UserSchema
+from app.schemas.user_schema import UserSchema, LoginSchema
 from app.utils.user_helper import UserHelper
 from app.logger import logger
+from fastapi import Header
 
+from app.auth import create_access_token, verify_token
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends
 
 from app.services.user_service import (
     create_user_service,
     fetch_all_users,
-    fetch_user_by_id
+    fetch_user_by_id,
+    fetch_user_by_email
 )
 
 router = APIRouter()
@@ -113,11 +118,40 @@ def get_user(user_id:int):
     }
 
 
-    
-    
+
+@router.post("/login")
+def login(user: LoginSchema):
+    try:
+        row = fetch_user_by_email(user.email)
+
+    except Exception:
+        raise HTTPException(500, "Database connection failed")
+
+    if not row:
+        raise HTTPException(404, "User not found")
+
+    token = create_access_token({"user_id": row[0]})
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
     
     
 
 
+security = HTTPBearer()
 
+@router.get("/protected")
+def protected_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
 
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(401, "Invalid token")
+
+    return {
+        "message": "Access granted",
+        "user": payload
+    }
