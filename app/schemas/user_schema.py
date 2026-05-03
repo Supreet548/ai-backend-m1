@@ -1,5 +1,5 @@
 from pydantic import BaseModel,EmailStr,Field
-from typing import Optional
+from typing import Optional, List
 
 
 class UserSchema(BaseModel):
@@ -14,3 +14,23 @@ class UserSchema(BaseModel):
 class LoginSchema(BaseModel):
     email: str
     password: str
+
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    age: int
+    city: str
+    role: str
+
+
+class UserListResponse(BaseModel):
+    success: bool
+    data: List[UserResponse]
+    message: str
+
+
+class SingleUserResponse(BaseModel):
+    success: bool
+    data: UserResponse

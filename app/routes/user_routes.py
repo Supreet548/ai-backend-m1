@@ -15,6 +15,8 @@ from app.services.user_service import (
     fetch_user_by_email
 )
 
+from app.schemas.user_schema import UserListResponse,SingleUserResponse
+
 router = APIRouter()
 
 @router.post("/users")
@@ -44,7 +46,7 @@ def create_user(user:UserSchema):
 
 #Fetch all users
 
-@router.get("/users")
+@router.get("/users", response_model=UserListResponse)
 def get_users():
     try:
         logger.info("Fetching all users")
@@ -67,7 +69,8 @@ def get_users():
             "name":row[1],
             "email":row[2],
             "age":row[3],
-            "city":row[4]
+            "city":row[4],
+            "role": row[6] 
         })
 
 
@@ -81,7 +84,7 @@ def get_users():
     
     
 #Get user by ID
-@router.get("/users/{user_id}")
+@router.get("/users/{user_id}",response_model=SingleUserResponse)
 def get_user(user_id:int):
     try:
 
@@ -113,7 +116,8 @@ def get_user(user_id:int):
             "name": row[1],
             "email": row[2],
             "age": row[3],
-            "city": row[4]
+            "city": row[4],
+            "role": row[6] 
         }
     }
 
@@ -166,7 +170,7 @@ def protected_route(user = Depends(get_current_user)):
 
 @router.get("/admin")
 def admin_route(user = Depends(get_current_user)):
-    
+
     if user.get("role") != "admin":
         raise HTTPException(403, "Access denied")
 
