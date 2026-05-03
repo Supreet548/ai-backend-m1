@@ -3,7 +3,7 @@ from app.schemas.user_schema import UserSchema, LoginSchema
 from app.utils.user_helper import UserHelper
 from app.logger import logger
 from fastapi import Header
-
+from app.dependencies.auth_dependency import get_current_user
 from app.auth import create_access_token, verify_token
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Depends
@@ -152,33 +152,22 @@ def login(user: LoginSchema):
     
 
 
-security = HTTPBearer()
+
 
 @router.get("/protected")
-def protected_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-
-    payload = verify_token(token)
-
-    if not payload:
-        raise HTTPException(401, "Invalid token")
+def protected_route(user = Depends(get_current_user)):
 
     return {
         "message": "Access granted",
-        "user": payload
+        "user": user
     }
 
 
 
 @router.get("/admin")
-def admin_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    payload = verify_token(token)
-
-    if not payload:
-        raise HTTPException(401, "Invalid token")
-
-    if payload.get("role") != "admin":
+def admin_route(user = Depends(get_current_user)):
+    
+    if user.get("role") != "admin":
         raise HTTPException(403, "Access denied")
 
     return {"message": "Welcome Admin"}
