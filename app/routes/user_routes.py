@@ -45,28 +45,24 @@ def create_user(user:UserSchema):
 
 #Fetch all users
 
-@router.get("/users", response_model=UserListResponse)
-def get_users():
+@router.get("/users")
+async def get_users():
     try:
-        logger.info("Fetching all users")
+        logger.info("Fetching all users (async)")
 
-        users = fetch_all_users()   
+        users = await fetch_all_users()
 
         logger.info(f"Returned {len(users)} users")
 
         return {
             "success": True,
-            "data": users,
-            "message": "Users fetched successfully"
+            "data": users
         }
 
-    except Exception:
-        logger.error("Database connection failed in GET /users")
+    except Exception as e:
+        logger.error(f"Error in async GET /users: {str(e)}")
 
-        raise HTTPException(
-            status_code=500,
-            detail="Database connection failed"
-        )
+        raise HTTPException(500, "Database connection failed")
     
     
 #Get user by ID

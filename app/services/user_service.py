@@ -1,5 +1,6 @@
 from app.database.connection import get_connection
 from app.utils.security import hash_password
+from app.database.async_connection import get_async_connection
 #  Create User
 def create_user_service(user):
     conn = get_connection()
@@ -16,29 +17,28 @@ def create_user_service(user):
 
 
 #  Fetch All Users
-def fetch_all_users():
-    conn = get_connection()
-    cur = conn.cursor()
+async def fetch_all_users():
+    conn = await get_async_connection()
 
-    cur.execute("SELECT * FROM users")
-    rows = cur.fetchall()
+    try:
+        rows = await conn.fetch("SELECT * FROM users")
 
-    cur.close()
-    conn.close()
+        users = []
 
-    users = []
+        for row in rows:
+            users.append({
+                "id": row["id"],
+                "name": row["name"],
+                "email": row["email"],
+                "age": row["age"],
+                "city": row["city"],
+                "role": row["role"]
+            })
 
-    for row in rows:
-        users.append({
-            "id": row[0],
-            "name": row[1],
-            "email": row[2],
-            "age": row[4],
-            "city": row[5],
-            "role": row[6]
-        })
+        return users
 
-    return users
+    finally:
+        await conn.close()
 
 
 #  Fetch User by ID
