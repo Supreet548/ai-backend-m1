@@ -1,26 +1,33 @@
 from app.database.connection import get_connection
 from app.utils.security import hash_password
-from app.database.async_connection import get_async_connection
+from app.database.async_connection import get_pool
+
 #  Create User
-def create_user_service(user):
-    conn = get_connection()
-    cur = conn.cursor()
+async def create_user_service(user):
+    pool = await get_pool()
 
-    cur.execute(
-        "INSERT INTO users (name, email, age, city) VALUES (%s, %s, %s, %s)",
-        (user.name, user.email, user.age, user.city)
-    )
+    hashed_pwd = hash_password(user.password)  
 
-    conn.commit()
-    cur.close()
-    conn.close()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO users (name, email, age, city, password, role)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            """,
+            user.name,
+            user.email,
+            user.age,
+            user.city,
+            hashed_pwd,  
+            user.role
+        )
 
 
 #  Fetch All Users
 async def fetch_all_users():
-    conn = await get_async_connection()
+    pool = await get_pool()
 
-    try:
+    async with pool.acquire() as conn:
         rows = await conn.fetch("SELECT * FROM users")
 
         users = []
@@ -37,68 +44,57 @@ async def fetch_all_users():
 
         return users
 
-    finally:
-        await conn.close()
+   
 
 
 #  Fetch User by ID
-def fetch_user_by_id(user_id):
-    conn = get_connection()
-    cur = conn.cursor()
+async def fetch_user_by_id(user_id):
+    pool = await get_pool()
 
-    cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-    row = cur.fetchone()
-
-    cur.close()
-    conn.close()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE id = $1",
+            user_id
+        )
 
     if not row:
         return None
 
     return {
-        "id": row[0],
-        "name": row[1],
-        "email": row[2],
-        "age": row[4],
-        "city": row[5],
-        "role": row[6]
-    }
+        "id": row["id"],
+        "name": row["name"],
+        "email": row["email"],
+        "age": row["age"],
+        "city": row["city"],
+        "role": row["role"]
+    } 
+
+
+
+
 
 #Fetch user by email
-def fetch_user_by_email(email):
-    conn = get_connection()
-    cur = conn.cursor()
+async def fetch_user_by_email(email):
+    pool = await get_pool()
 
-    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-    row = cur.fetchone()
 
-    cur.close()
-    conn.close()
+
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT * FROM users WHERE email = $1",
+            email
+        )
+
+    
 
     if not row:
         return None
 
     return {
-        "id": row[0],
-        "email": row[2],
-        "password": row[3],
-        "role": row[6]
+        "id": row["id"],
+        "email": row["email"],
+        "password": row["password"],
+        "role": row["role"]
     }
 
 
-
-
-def create_user_service(user):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    hashed_pwd = hash_password(user.password)
-
-    cur.execute(
-        "INSERT INTO users (name, email, age, city, password, role) VALUES (%s, %s, %s, %s, %s, %s)",
-        (user.name, user.email, user.age, user.city, hashed_pwd , user.role)
-    )
-
-    conn.commit()
-    cur.close()
-    conn.close()

@@ -19,12 +19,11 @@ from app.services.user_service import (
 router = APIRouter()
 
 @router.post("/users")
-def create_user(user:UserSchema):
+async def create_user(user: UserSchema):
     try:
-
         logger.info(f"Creating user: {user.name}")
 
-        create_user_service(user)
+        await create_user_service(user)   # 👈 IMPORTANT
 
         helper = UserHelper(user.name)
 
@@ -32,10 +31,9 @@ def create_user(user:UserSchema):
             "success": True,
             "message": helper.welcome()
         }
-    
-    except Exception:
 
-        logger.error("Database connection failed")
+    except Exception as e:
+        logger.error(f"Error creating user: {str(e)}")
 
         raise HTTPException(
             status_code=500,
@@ -65,13 +63,12 @@ async def get_users():
         raise HTTPException(500, "Database connection failed")
     
     
-#Get user by ID
 @router.get("/users/{user_id}", response_model=SingleUserResponse)
-def get_user(user_id: int):
+async def get_user(user_id: int):   
     try:
         logger.info(f"Fetching user with id: {user_id}")
 
-        user = fetch_user_by_id(user_id)   # ✅ already dict
+        user = await fetch_user_by_id(user_id)   
 
     except Exception:
         logger.error("Database connection failed in GET /users")
@@ -94,11 +91,10 @@ def get_user(user_id: int):
         "data": user
     }
 
-
 @router.post("/login")
-def login(user: LoginSchema):
+async def login(user: LoginSchema):
     try:
-        row = fetch_user_by_email(user.email)
+        row = await fetch_user_by_email(user.email)
 
     except Exception:
         raise HTTPException(500, "Database connection failed")
@@ -106,9 +102,7 @@ def login(user: LoginSchema):
     if not row:
         raise HTTPException(404, "User not found")
 
-    stored_password = row["password"]   # ✅ cleaner (after service fix)
-
-    if not verify_password(user.password, stored_password):
+    if not verify_password(user.password, row["password"]):
         raise HTTPException(401, "Invalid credentials")
 
     token = create_access_token({
@@ -125,7 +119,7 @@ def login(user: LoginSchema):
 
 # PROTECTED
 @router.get("/protected")
-def protected_route(user=Depends(get_current_user)):
+async def protected_route(user = Depends(get_current_user)):
     return {
         "message": "Access granted",
         "user": user
@@ -134,7 +128,7 @@ def protected_route(user=Depends(get_current_user)):
 
 # ADMIN
 @router.get("/admin")
-def admin_route(user=Depends(get_current_user)):
+async def admin_route(user = Depends(get_current_user)):
 
     if user.get("role") != "admin":
         raise HTTPException(403, "Access denied")
