@@ -1,4 +1,4 @@
-from app.database import get_connection
+from app.database.connection import get_connection
 from app.utils.security import hash_password
 #  Create User
 def create_user_service(user):
@@ -26,11 +26,23 @@ def fetch_all_users():
     cur.close()
     conn.close()
 
-    return rows
+    users = []
+
+    for row in rows:
+        users.append({
+            "id": row[0],
+            "name": row[1],
+            "email": row[2],
+            "age": row[4],
+            "city": row[5],
+            "role": row[6]
+        })
+
+    return users
 
 
 #  Fetch User by ID
-def fetch_user_by_id(user_id: int):
+def fetch_user_by_id(user_id):
     conn = get_connection()
     cur = conn.cursor()
 
@@ -40,10 +52,20 @@ def fetch_user_by_id(user_id: int):
     cur.close()
     conn.close()
 
-    return row
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "name": row[1],
+        "email": row[2],
+        "age": row[4],
+        "city": row[5],
+        "role": row[6]
+    }
 
 #Fetch user by email
-def fetch_user_by_email(email: str):
+def fetch_user_by_email(email):
     conn = get_connection()
     cur = conn.cursor()
 
@@ -53,7 +75,15 @@ def fetch_user_by_email(email: str):
     cur.close()
     conn.close()
 
-    return row
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "email": row[2],
+        "password": row[3],
+        "role": row[6]
+    }
 
 
 
