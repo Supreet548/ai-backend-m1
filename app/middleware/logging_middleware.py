@@ -9,7 +9,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
 
-        # 🔹 Step 3: Generate Request ID
+        #Generate Request ID
         request_id = str(uuid.uuid4())
 
         start_time = time.time()
@@ -24,7 +24,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             f"[{request_id}] Completed response: {response.status_code} in {process_time:.4f}s"
         )
 
-        # 🔹 Step 4: Add headers to response
+        #Add headers to response
         response.headers["X-Process-Time"] = str(process_time)
         response.headers["X-Request-ID"] = request_id
 
