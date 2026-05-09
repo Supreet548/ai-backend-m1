@@ -18,12 +18,17 @@ from app.services.user_service import (
 
 router = APIRouter()
 
-@router.post("/users")
+@router.post(
+    "/users",
+    tags=["Users"],
+    summary="Create a new user",
+    description="Register a new user and store details in database"
+)
 async def create_user(user: UserSchema):
     try:
         logger.info(f"Creating user: {user.name}")
 
-        await create_user_service(user)   # 👈 IMPORTANT
+        await create_user_service(user)   
 
         helper = UserHelper(user.name)
 
@@ -43,7 +48,13 @@ async def create_user(user: UserSchema):
 
 #Fetch all users
 
-@router.get("/users")
+@router.get(
+    "/users",
+    response_model=UserListResponse,
+    tags=["Users"],
+    summary="Fetch all users",
+    description="Retrieve all registered users from database"
+)
 async def get_users():
     try:
         logger.info("Fetching all users (async)")
@@ -63,7 +74,13 @@ async def get_users():
         raise HTTPException(500, "Database connection failed")
     
     
-@router.get("/users/{user_id}", response_model=SingleUserResponse)
+@router.get(
+    "/users/{user_id}",
+    response_model=SingleUserResponse,
+    tags=["Users"],
+    summary="Fetch user by ID",
+    description="Retrieve a single user using user ID"
+)
 async def get_user(user_id: int):   
     try:
         logger.info(f"Fetching user with id: {user_id}")
@@ -91,7 +108,12 @@ async def get_user(user_id: int):
         "data": user
     }
 
-@router.post("/login")
+@router.post(
+    "/login",
+    tags=["Auth"],
+    summary="Login user",
+    description="Authenticate user and generate JWT token"
+)
 async def login(user: LoginSchema):
     try:
         row = await fetch_user_by_email(user.email)
@@ -118,7 +140,12 @@ async def login(user: LoginSchema):
 
 
 # PROTECTED
-@router.get("/protected")
+@router.get(
+    "/protected",
+    tags=["Protected"],
+    summary="Protected route",
+    description="Accessible only with valid JWT token"
+)
 async def protected_route(user = Depends(get_current_user)):
     return {
         "message": "Access granted",
@@ -127,10 +154,17 @@ async def protected_route(user = Depends(get_current_user)):
 
 
 # ADMIN
-@router.get("/admin")
+@router.get(
+    "/admin",
+    tags=["Admin"],
+    summary="Admin route",
+    description="Accessible only by admin users"
+)
 async def admin_route(user = Depends(get_current_user)):
 
     if user.get("role") != "admin":
         raise HTTPException(403, "Access denied")
 
     return {"message": "Welcome Admin"}
+
+
