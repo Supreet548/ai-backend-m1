@@ -4,7 +4,7 @@ from app.schemas.user_schema import UserListResponse,SingleUserResponse
 from app.utils.user_helper import UserHelper
 from app.logger import logger
 from app.dependencies.auth_dependency import get_current_user
-from app.auth.auth_handler import create_access_token
+from app.auth.auth_handler import create_access_token,verify_token
 from app.utils.security import verify_password
 
 from app.services.user_service import (
@@ -48,13 +48,7 @@ async def create_user(user: UserSchema):
 
 #Fetch all users
 
-@router.get(
-    "/users",
-    response_model=UserListResponse,
-    tags=["Users"],
-    summary="Fetch all users",
-    description="Retrieve all registered users from database"
-)
+@router.get("/users", response_model=UserListResponse, tags=["Users"])
 async def get_users():
     try:
         logger.info("Fetching all users (async)")
@@ -65,8 +59,17 @@ async def get_users():
 
         return {
             "success": True,
+            "message": "Users fetched successfully",
             "data": users
         }
+
+    except Exception as e:
+        logger.error(f"Error in async GET /users: {str(e)}")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Database connection failed"
+        )
 
     except Exception as e:
         logger.error(f"Error in async GET /users: {str(e)}")
